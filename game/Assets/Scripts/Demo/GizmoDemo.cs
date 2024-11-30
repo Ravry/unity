@@ -7,14 +7,16 @@ public class GizmoDemo : MonoBehaviour
 {
 
     [Header("Noise Parameters")]
-    [SerializeField] private int octaves = 1;
-    [SerializeField] private float scalar = .1f;
-    [SerializeField] private float threshold = 1.0f;
-    [SerializeField] private int size = 10;
+    public int octaves = 1;
+    public float scalar = .1f;
+    public float threshold = 1.0f;
+    public int size = 10;
 
     [Header("Gizmo Parameters")]
     [SerializeField] private float radius = .1f;
-    
+    [SerializeField] private bool cubes = false;
+
+
     private float[,,] perlinValues;
     
     void OnValidate() { 
@@ -42,8 +44,9 @@ public class GizmoDemo : MonoBehaviour
                     }
                     perlinValue += 1.0f;
                     perlinValue /= 2.0f;
+                    
                     _perlinValues[x, y, z] = perlinValue;
-                    Debug.Log(perlinValue);
+                    // Debug.Log(perlinValue);
                 }
         
         return _perlinValues;
@@ -58,14 +61,14 @@ public class GizmoDemo : MonoBehaviour
                     float perlinValue = perlinValues[x, y, z];
                     if (perlinValue <= threshold)
                     {
-                        Gizmos.color = new Color(perlinValue, perlinValue, 0);
+                        Gizmos.color = new Color(perlinValue, perlinValue, perlinValue);
                         Gizmos.DrawSphere(transform.position + new Vector3(x, y, z), radius);
                     }
                 }
     }
 
     private void Start() {
-        if (!Application.isPlaying) return;
+        if (!Application.isPlaying || !cubes) return;
 
         for (int y = 0; y < size; y++)
             for (int z = 0; z < size; z++)
