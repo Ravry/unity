@@ -1,4 +1,4 @@
-using System.Runtime;
+using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine;
 
 public class OrbitAround : MonoBehaviour
@@ -14,6 +14,13 @@ public class OrbitAround : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKey(KeyCode.Space))
+            offset.y += 10f * Time.deltaTime;
+        if (Input.GetKey(KeyCode.LeftControl))
+            offset.y -= 10f * Time.deltaTime;
+
+        radius -= Input.mouseScrollDelta.y;
+        radius = Mathf.Clamp(radius, 0, 100);
         float scalar = ease(angle / 360f);
         angle += speed * Time.deltaTime * scalar;
         angle %= 360f;

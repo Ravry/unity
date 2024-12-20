@@ -35,7 +35,7 @@ public class MarchingCubes : MonoBehaviour
                     for (int i = 0; i < 8; i++)
                     {
                         Vector3Int corner = new Vector3Int(x, y, z) + MarchingTable.Corners[i];
-                        cubeCorners[i] = noise(corner.x, corner.y, corner.z);
+                        cubeCorners[i] = noise(transform.position.x + corner.x, transform.position.y + corner.y, transform.position.z + corner.z);
                         if (!(cubeCorners[i] <= noiseDemo.threshold))
                         {
                             index |= 1 << i;
@@ -97,11 +97,11 @@ public class MarchingCubes : MonoBehaviour
 
     void OnDrawGizmos() {
         Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(Vector3.one * ((noiseDemo.size)/2 - .5f), Vector3.one * (noiseDemo.size - 1));
+        Gizmos.DrawWireCube(transform.position + Vector3.one * ((noiseDemo.size)/2 - .5f), Vector3.one * (noiseDemo.size - 1));
 
         if (marchCubePos.x == (noiseDemo.size - 2) && marchCubePos.y == (noiseDemo.size - 2) && marchCubePos.z == (noiseDemo.size - 2))
             return;
 
-        Gizmos.DrawWireCube(marchCubePos + Vector3.one * .5f, Vector3.one);
+        Gizmos.DrawWireCube(transform.position + marchCubePos + Vector3.one * .5f, Vector3.one);
     }
 }

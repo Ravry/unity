@@ -39,7 +39,7 @@ public class GizmoDemo : MonoBehaviour
                     float scale = 1.0f;
                     for (int o = 0; o < (octaves + 1); o++)
                     {
-                        perlinValue += scale * Perlin.Noise3D(x * scalar * (float)o, y * scalar * (float)o, z * scalar * (float)o);
+                        perlinValue += scale * Perlin.Noise3D(transform.position.x + x * scalar * (float)o, transform.position.y +  y * scalar * (float)o, transform.position.z + z * scalar * (float)o);
                         scale /= 2.0f;
                     }
                     perlinValue += 1.0f;
@@ -53,7 +53,9 @@ public class GizmoDemo : MonoBehaviour
     }
 
     void OnDrawGizmos() {
-        
+        if (!this.enabled)
+            return;
+
         for (int y = 0; y < size; y++)
             for (int z = 0; z < size; z++)
                 for (int x = 0; x < size; x++)

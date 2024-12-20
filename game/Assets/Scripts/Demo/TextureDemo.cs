@@ -11,6 +11,7 @@ public class TextureDemo : MonoBehaviour
         
     [Header("Texture Parameters")]
     [SerializeField] private int size = 10;
+    [SerializeField] private FilterMode filterMode = FilterMode.Bilinear;
 
     private Material mat;
     private Texture2D tex;
@@ -28,7 +29,7 @@ public class TextureDemo : MonoBehaviour
     
         this.mat = this.GetComponent<MeshRenderer>().sharedMaterial;
         this.tex = new Texture2D(size, size);
-        this.tex.filterMode = FilterMode.Bilinear;
+        this.tex.filterMode = filterMode;
         this.mat.mainTexture = tex;
         ApplyTexture();
     }
@@ -45,8 +46,10 @@ public class TextureDemo : MonoBehaviour
                     perlinValue += scale * Perlin.Noise2D((x) * scalar * (float)o, (y) * scalar * (float)o); 
                     scale /= 2.0f;
                 }
+                perlinValue = Perlin.Noise2D(x * scalar, y * scalar);
                 perlinValue += 1.0f;
                 perlinValue /= 2.0f;
+                perlinValue = Mathf.RoundToInt(perlinValue);
                 tex.SetPixel(x, y, new Color(perlinValue, perlinValue, perlinValue));
             }
 
