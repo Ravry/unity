@@ -56,7 +56,6 @@ public class RaymarchFeature : ScriptableRendererFeature
             _settings.material.SetMatrix("_CamToWorld", renderingData.cameraData.camera.cameraToWorldMatrix);
             _settings.material.SetMatrix("_InverseProjectionMatrix", renderingData.cameraData.camera.projectionMatrix.inverse);
             _settings.material.SetMatrix("_RaymarchArea", area.bound);
-            _settings.material.SetFloat("_NoiseScale", area.noiseScale);
             CommandBuffer cmd = CommandBufferPool.Get("RaymarchPass");
             using (new ProfilingScope(cmd, _profilingSampler))
             {

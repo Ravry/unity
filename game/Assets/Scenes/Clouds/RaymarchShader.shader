@@ -42,7 +42,6 @@ Shader "Custom/RaymarchShader"
             uniform float4x4 _CamToWorld;
             uniform float4x4 _InverseProjectionMatrix;
             uniform float4x4 _RaymarchArea;
-            uniform float _NoiseScale;
 
             float4 _WorldSpaceLightPos0;
 
@@ -58,9 +57,28 @@ Shader "Custom/RaymarchShader"
                 return normalize(viewSpace.xyz);
             }
 
+            float raymarchLight(float3 pos, int stepCount, float stepSize)
+            {
+                float3 directionalLightDirection = normalize(_WorldSpaceLightPos0.xyz);
+                float transmittance = 0;
+
+                float dist = 0;
+                for (int i = 0; i < stepCount; i++)
+                {
+                    float3 currentPos = pos + directionalLightDirection * dist;
+                    float distToBox = sdBox(currentPos, _RaymarchArea[0].xyz, _RaymarchArea[1].xyz);
+                    if (distToBox > 0) break;
+                    dist += stepSize;
+                }
+
+                transmittance = dist;
+                return transmittance;
+            }
+
             half4 raymarchVolume(float3 pos, float3 rayDir, int stepCount, float stepSize, float3 sceneColor)
             {
                 float accumulatedDensity = 0;
+                float accumulatedLight = 0;
                 float dist = 0;            
                 pos += rayDir * .1;
 
@@ -73,13 +91,15 @@ Shader "Custom/RaymarchShader"
 
                     float density = 0;
                     float amplitude = 1.0;
-                    float frequency = _NoiseScale;
+                    float frequency = _RaymarchArea[2].z;
 
-                    for(int oct = 0; oct < 1; oct++) {
-                        density += noise(currentPos * frequency + _Time.y) * amplitude;
+                    for(int oct = 0; oct < _RaymarchArea[2].w; oct++) {
+                        density += noise(currentPos * frequency + _Time.y) * amplitude; 
                         amplitude *= 0.5;
                         frequency *= 2.0;
                     }
+
+                    accumulatedLight += raymarchLight(currentPos, stepCount, .1f);
 
                     density = max(0, density);
                     accumulatedDensity += density * stepSize;
@@ -87,9 +107,9 @@ Shader "Custom/RaymarchShader"
                 }
             
                 float ABSORPTION = .1f;
-                float transmittance = exp(-accumulatedDensity * ABSORPTION);
+                float transmittance = exp(-(accumulatedDensity) * ABSORPTION);
                 transmittance = smoothstep(0, 1, transmittance);
-                return half4(lerp(_RaymarchArea[3].rgb, sceneColor, transmittance), 1);
+                return half4(lerp(float3(1,1,1), sceneColor, transmittance), 1);
             }
 
             half4 raymarch(float2 uv, int stepCount)

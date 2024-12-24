@@ -526,7 +526,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scalar: 0.2
   size: 20
-  seconds: 0.25
+  seconds: 0.08
+  twoD: 0
+  primitives: 0
+  greedy: 0
 --- !u!23 &1628315606
 MeshRenderer:
   m_ObjectHideFlags: 0
