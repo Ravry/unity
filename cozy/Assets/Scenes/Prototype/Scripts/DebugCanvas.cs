@@ -14,6 +14,7 @@ public class DebugCanvas : MonoBehaviour
     [SerializeField] private TMP_Text playerVelocity_D;
     [SerializeField] private TMP_Text playerGrounded_D;
     [SerializeField] private TMP_Text playerState_D;
+    [SerializeField] private TMP_Text playerRaycast_D;
 
 
     private bool debugMode = false;
@@ -45,5 +46,6 @@ public class DebugCanvas : MonoBehaviour
         playerVelocity_D.text = PlayerStateMachine.instance.velocity.ToString();
         playerGrounded_D.text = PlayerStateMachine.instance.grounded.ToString();
         playerState_D.text = PlayerStateMachine.instance.GetCurrentState().ToString();
+        playerRaycast_D.text = PlayerStateMachine.instance.raycastHit.transform != null ? $"{PlayerStateMachine.instance.raycastHit.transform.name}({PlayerStateMachine.instance.raycastHit.distance.ToString("0.00")})" : "none";
     } 
 }

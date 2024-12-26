@@ -1,6 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using DG.Tweening;
+using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -9,6 +9,7 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     public static PlayerStateMachine instance;
     
     [Header("Player")]
+    public LayerMask playerLayerMask;
     public Transform groundCheck;
     public Transform cam;
     public CharacterController controller;
@@ -18,12 +19,24 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     public float groundDistance = .2f;
     public LayerMask groundMask;
 
+    [Header("View Bobbing")]
+    public float bobFrequency = 2.0f;
+    public float bobAmplitude = 0.1f;
+
+    [Header("Interact")]
+    public TMP_Text interactText;
+    public float interactFadeDuration = .2f;
+    public float maxDistance = 2.0f;
+
+    public KeyCodes keyCodes;
 
     [HideInInspector] public Vector3 inputVec;
     [HideInInspector] public Vector3 mouseVec;
     [HideInInspector] public float pitch, yaw;
     [HideInInspector] public Vector3 velocity;
     [HideInInspector] public bool grounded;
+    [HideInInspector] public RaycastHit raycastHit;
+    [HideInInspector] public BaseInteractable interactable;
 
     public override void ReloadStates()
     {
@@ -63,6 +76,7 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
         );
 
         HandleGroundCheck();
+        HandleInteractable();
     }
 
     public void HandleMouseInput() {
@@ -82,9 +96,14 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     }
 
     public void HandleStationaryInput() {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(keyCodes.jumpKey))
         {
             velocity.y = Mathf.Sqrt(jumpHeight * 2f * gravity);
+        }
+
+        if (Input.GetKeyDown(keyCodes.interactKey))
+        {
+            interactable?.interact();
         }
     }
 
@@ -99,6 +118,23 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
         grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
     }
 
+    private void HandleInteractable() {
+        Physics.Raycast(cam.transform.position, cam.transform.forward, out raycastHit, maxDistance, ~playerLayerMask);
+        BaseInteractable hitInteractable = raycastHit.transform?.gameObject.GetComponent<BaseInteractable>();
+        
+        if (hitInteractable != null) {
+            interactable = hitInteractable;
+            if (interactable.canInteract)
+                interactText.DOFade(1, interactFadeDuration);
+            else 
+                interactText.DOFade(.2f, interactFadeDuration);
+        }
+        else {
+            interactable = null;
+            interactText.DOFade(0, interactFadeDuration);
+        } 
+    }
+
     public System.Type GetCurrentState() {
         return currentState.GetType();
     }
@@ -106,14 +142,5 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
-        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit, 10f))
-        {
-            Gizmos.DrawLine(cam.transform.position, hit.point);
-        }
-        else
-        {
-            Gizmos.DrawLine(cam.transform.position, cam.transform.position + cam.transform.forward * 10f);
-        }
-
     }
 }

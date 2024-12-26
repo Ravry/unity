@@ -6,21 +6,31 @@ public class PlayerWalkState : BaseState<EPlayerStates>
 {
     public static PlayerStateMachine PSM => PlayerStateMachine.instance;
 
+    private float bobbingTimer = 0.0f;
+
     public override void Update()
     {
         PSM.HandleMouseInput();
         PSM.HandleKeyboardMovement();
-        // HandleViewBob(.1f, PSM.speed);
+        HandleViewBobbing();
         PSM.HandleStationaryInput();
         PSM.HandleGravity();
     }
 
+    public override void ExitState()
+    {
+        bobbingTimer = 0f;
+    }
 
-    private float moveTime = 0f;
-    private void HandleViewBob(float intensity, float speed) {
-        moveTime += Time.deltaTime * speed;
-        float absSinY = -Mathf.Abs(intensity * Mathf.Sin(moveTime));
-        PSM.cam.transform.position += Vector3.up * absSinY;
+    private void HandleViewBobbing() {
+        bobbingTimer += Time.deltaTime * PSM.bobFrequency;
+        float bobOffsetY = Mathf.Sin(bobbingTimer) * PSM.bobAmplitude;
+        float bobOffsetX = Mathf.Cos(bobbingTimer / 2) * PSM.bobAmplitude / 2;
+        PSM.cam.position = new Vector3(
+            PSM.cam.position.x + bobOffsetX,
+            PSM.cam.position.y + bobOffsetY,
+            PSM.cam.position.z
+        );
     }
 
     public override EPlayerStates CheckState()
