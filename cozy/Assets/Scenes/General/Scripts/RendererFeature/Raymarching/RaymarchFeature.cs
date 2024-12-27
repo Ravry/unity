@@ -4,7 +4,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.RenderGraphModule.Util;
 
-public class CustomFeature : ScriptableRendererFeature
+public class RaymarchFeature : ScriptableRendererFeature
 {
     
     [System.Serializable]
@@ -16,10 +16,10 @@ public class CustomFeature : ScriptableRendererFeature
 
     public Settings settings;
 
-    class CustomRenderPass : ScriptableRenderPass
+    class RaymarchRenderPass : ScriptableRenderPass
     {
         private Settings sett;
-        public CustomRenderPass(Settings settings)
+        public RaymarchRenderPass(Settings settings)
         {
             sett = settings;
             requiresIntermediateTexture = true;
@@ -27,10 +27,16 @@ public class CustomFeature : ScriptableRendererFeature
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            var _passName = "Custom";
+            RaymarchArea area = GameObject.FindFirstObjectByType<RaymarchArea>();
+            
+            if (area == null)
+                return;
 
-            sett.material.SetMatrix("_CamToWorld", Camera.main.cameraToWorldMatrix);
-            sett.material.SetMatrix("_InverseProjectionMatrix", Camera.main.projectionMatrix.inverse);
+            var cameraData = frameData.Get<UniversalCameraData>();
+
+            sett.material.SetMatrix("_CamToWorld", cameraData.camera.cameraToWorldMatrix);
+            sett.material.SetMatrix("_InverseProjectionMatrix", cameraData.camera.projectionMatrix.inverse);
+            sett.material.SetMatrix("_RaymarchArea", area.bound);
 
             var resourceData = frameData.Get<UniversalResourceData>();
 
@@ -43,25 +49,24 @@ public class CustomFeature : ScriptableRendererFeature
             var source = resourceData.activeColorTexture;
             
             var destinationDesc = renderGraph.GetTextureDesc(source);
-            destinationDesc.name = $"CameraColor-{_passName}";
+            destinationDesc.name = $"CameraColor-{passName}";
             destinationDesc.clearBuffer = false;
 
             TextureHandle destination = renderGraph.CreateTexture(destinationDesc);
             
             RenderGraphUtils.BlitMaterialParameters para = new(source, destination, sett.material, 0);
             
-            renderGraph.AddBlitPass(para, passName: _passName);
+            renderGraph.AddBlitPass(para, passName: passName);
             
             resourceData.cameraColor = destination;
-            Debug.Log("blit");
         }
     }
 
-    CustomRenderPass m_ScriptablePass;
+    RaymarchRenderPass m_ScriptablePass;
 
     public override void Create()
     {
-        m_ScriptablePass = new CustomRenderPass(settings);
+        m_ScriptablePass = new RaymarchRenderPass(settings);
         m_ScriptablePass.renderPassEvent = settings.renderPassEvent;
     }
 

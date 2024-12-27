@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine;
 
 public class PlayerIdleState : BaseState<EPlayerStates>
@@ -16,6 +17,7 @@ public class PlayerIdleState : BaseState<EPlayerStates>
         PSM.HandleMouseInput();
         PSM.HandleStationaryInput();
         PSM.HandleGravity();
+        PSM.HandleStopViewBobbing();
     }
 
     public override EPlayerStates CheckState()

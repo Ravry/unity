@@ -12,24 +12,24 @@ public class PlayerWalkState : BaseState<EPlayerStates>
     {
         PSM.HandleMouseInput();
         PSM.HandleKeyboardMovement();
-        HandleViewBobbing();
         PSM.HandleStationaryInput();
         PSM.HandleGravity();
+        HandleViewBobbing();
     }
 
     public override void ExitState()
     {
-        bobbingTimer = 0f;
+        bobbingTimer = 0;
     }
 
     private void HandleViewBobbing() {
-        bobbingTimer += Time.deltaTime * PSM.bobFrequency;
-        float bobOffsetY = Mathf.Sin(bobbingTimer) * PSM.bobAmplitude;
-        float bobOffsetX = Mathf.Cos(bobbingTimer / 2) * PSM.bobAmplitude / 2;
-        PSM.cam.position = new Vector3(
-            PSM.cam.position.x + bobOffsetX,
-            PSM.cam.position.y + bobOffsetY,
-            PSM.cam.position.z
+        bobbingTimer += Time.deltaTime * PSM.bobFrequency * PSM.currentSpeedMultiplier;
+        float bobOffsetY = Mathf.Cos(bobbingTimer) * PSM.bobAmplitude * PSM.currentSpeedMultiplier;
+        float bobOffsetX = Mathf.Cos(bobbingTimer / 2) * (PSM.bobAmplitude / 2) * PSM.currentSpeedMultiplier;
+        PSM.cam.localPosition = Vector3.Lerp(
+            PSM.cam.localPosition, 
+            PSM.camOfffset + new Vector3(bobOffsetX, bobOffsetY, 0),
+            PSM.camResetTime * Time.deltaTime
         );
     }
 

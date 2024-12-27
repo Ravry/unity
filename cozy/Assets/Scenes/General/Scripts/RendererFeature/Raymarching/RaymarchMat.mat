@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_RaymarchShader
-  m_Shader: {fileID: 4800000, guid: 530c5b7c3e9f434439fbcd633eeba06b, type: 3}
+  m_Name: RaymarchMat
+  m_Shader: {fileID: 4800000, guid: 9c882edad40ce514fb7789909c541642, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []

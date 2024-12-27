@@ -1,0 +1,42 @@
+// InstanceMatrixShader.compute
+#pragma kernel CSMain
+
+struct InstanceData {
+    float4x4 mat;
+};
+
+RWStructuredBuffer<InstanceData> instanceBuffer;
+uniform uint _Resolution;
+uniform float3 _CenterPosition;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID) {
+    uint index = id.x + id.y * _Resolution;
+    float halfRes = (_Resolution / 2.0f);
+    float3 position = _CenterPosition + float3(id.x - halfRes, 0.0f, id.y - halfRes);
+    float scale = 1.0f + (index % 10) * 0.1f;
+    float angle = (index % 360) * 3.14159265 / 180.0f;
+
+    float4x4 rotation = float4x4(
+        cos(angle), 0, -sin(angle), 0,
+        0, 1, 0, 0,
+        sin(angle), 0, cos(angle), 0,
+        0, 0, 0, 1
+    );
+
+    float4x4 translation = float4x4(
+        1, 0, 0, position.x,
+        0, 1, 0, position.y,
+        0, 0, 1, position.z,
+        0, 0, 0, 1
+    );
+
+    float4x4 scaling = float4x4(
+        scale, 0, 0, 0,
+        0, scale, 0, 0,
+        0, 0, scale, 0,
+        0, 0, 0, 1
+    );
+
+    instanceBuffer[index].mat = mul(translation, mul(rotation, scaling));
+}

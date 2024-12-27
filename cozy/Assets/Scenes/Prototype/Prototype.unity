@@ -93,7 +93,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: 435a85b597e15b249961d31bf4cd0021,
+    type: 2}
   m_LightingSettings: {fileID: 1136302737}
 --- !u!196 &4
 NavMeshSettings:
@@ -3282,7 +3283,7 @@ MonoBehaviour:
   noiseOctaves: 1
   stepSize: 0.1
   stepCount: 100
-  volumeColor: {r: 0, g: 0.3427062, b: 1, a: 1}
+  volumeColor: {r: 0, g: 0.57800484, b: 1, a: 1}
   bound:
     e00: -2.825
     e01: 2
@@ -3297,7 +3298,7 @@ MonoBehaviour:
     e22: 0.8
     e23: 1
     e30: 0
-    e31: 0.3427062
+    e31: 0.57800484
     e32: 1
     e33: 0
 --- !u!4 &694766355
@@ -11533,6 +11534,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a444b980dc1f5b4aba14ec023e7e0bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  camOfffset: {x: 0, y: 2, z: 0}
+  camResetTime: 20
   playerLayerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -11540,24 +11543,27 @@ MonoBehaviour:
   cam: {fileID: 481659661}
   controller: {fileID: 1460600157}
   gravity: 35
-  speed: 5
+  speed: 4
+  sprintMultiplier: 1.5
   jumpHeight: 1.5
   groundDistance: 0.2
   groundMask:
     serializedVersion: 2
     m_Bits: 8
   bobFrequency: 15
-  bobAmplitude: 0
+  bobAmplitude: 0.05
   interactText: {fileID: 608827473}
   interactFadeDuration: 0.1
   maxDistance: 2
   keyCodes:
+    sprintKey: 304
     jumpKey: 32
     interactKey: 101
   inputVec: {x: 0, y: 0, z: 0}
   mouseVec: {x: 0, y: 0, z: 0}
   pitch: 0
   yaw: 0
+  currentSpeedMultiplier: 0
   velocity: {x: 0, y: 0, z: 0}
   grounded: 0
   interactable: {fileID: 0}
@@ -13051,7 +13057,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -13125,6 +13131,54 @@ MonoBehaviour:
   playerGrounded_D: {fileID: 51874034}
   playerState_D: {fileID: 1336656605}
   playerRaycast_D: {fileID: 1526822872}
+--- !u!1 &2029324039
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2029324040}
+  - component: {fileID: 2029324041}
+  m_Layer: 0
+  m_Name: InstancingManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2029324040
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029324039}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11, y: 0, z: -17}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2029324041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029324039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2516ea85253f1ee4b9ec5f127315bb92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  computeShader: {fileID: 7200000, guid: f9305ab276887384aa30f04e188a2320, type: 3}
+  mesh: {fileID: -7622257541081266546, guid: 0e0a01b17feb2ef488c423253487debe, type: 3}
+  material: {fileID: 2100000, guid: 7dff3ea0a3baa8d4d8334cc0bfc7aa18, type: 2}
+  size: 16
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -13151,3 +13205,4 @@ SceneRoots:
   - {fileID: 689718008}
   - {fileID: 1248038629}
   - {fileID: 1198636450}
+  - {fileID: 2029324040}

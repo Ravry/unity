@@ -9,12 +9,15 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     public static PlayerStateMachine instance;
     
     [Header("Player")]
+    public Vector3 camOfffset;
+    public float camResetTime = .1f;
     public LayerMask playerLayerMask;
     public Transform groundCheck;
     public Transform cam;
     public CharacterController controller;
     public float gravity = 20.0f;
     public float speed = 8.0f;
+    public float sprintMultiplier = 1.5f;
     public float jumpHeight = 2.0f;
     public float groundDistance = .2f;
     public LayerMask groundMask;
@@ -33,6 +36,7 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     [HideInInspector] public Vector3 inputVec;
     [HideInInspector] public Vector3 mouseVec;
     [HideInInspector] public float pitch, yaw;
+    [HideInInspector] public float currentSpeedMultiplier;
     [HideInInspector] public Vector3 velocity;
     [HideInInspector] public bool grounded;
     [HideInInspector] public RaycastHit raycastHit;
@@ -83,7 +87,6 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
         pitch -= mouseVec.y;
         pitch = Mathf.Clamp(pitch, -80.0f, 80.0f);
         yaw += mouseVec.x;
-        cam.position = transform.position + Vector3.up * 2;
         cam.rotation = Quaternion.Euler(pitch, yaw, 0);
         transform.rotation = Quaternion.Euler(0, yaw, 0);
     }
@@ -91,7 +94,8 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     public void HandleKeyboardMovement() {
         Vector3 normalizedInput = inputVec.normalized;
         Vector3 move = transform.right * normalizedInput.x + transform.forward * normalizedInput.z;
-        move *= Time.deltaTime * speed;
+        currentSpeedMultiplier = Input.GetKey(keyCodes.sprintKey) ? sprintMultiplier : 1f;
+        move *= Time.deltaTime * speed * currentSpeedMultiplier;
         controller.Move(move);
     }
 
@@ -116,6 +120,10 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
 
     public void HandleGroundCheck() {
         grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+    }
+
+    public void HandleStopViewBobbing() {
+        cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, camOfffset, camResetTime * Time.deltaTime);
     }
 
     private void HandleInteractable() {

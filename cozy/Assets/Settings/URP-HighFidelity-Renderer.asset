@@ -80,9 +80,11 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: -1878332245247344467}
   - {fileID: -8180274706553307608}
-  m_RendererFeatureMap: adc0de57c6d2eee528fec6ce7ed3798e
+  - {fileID: 2405429626654894099}
+  - {fileID: 6518345680114940525}
+  m_RendererFeatureMap: adc0de57c6d2eee528fec6ce7ed3798e1328f73c80cd61216dfa7342dcd0755a
   m_UseNativeRenderPass: 0
-  xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
+  xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 2
   m_OpaqueLayerMask:
@@ -106,3 +108,35 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
+--- !u!114 &2405429626654894099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c36b463f1b043a44ba760d3c5b05a8d, type: 3}
+  m_Name: EdgeDetectionFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    material: {fileID: 2100000, guid: d25b0d937c0324142a472a7f21209893, type: 2}
+--- !u!114 &6518345680114940525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e28ee5c44a1d1c949814650315bfca33, type: 3}
+  m_Name: DitheringFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    material: {fileID: 2100000, guid: 541ba4c54e9d59d44ba9c63a9250362b, type: 2}
