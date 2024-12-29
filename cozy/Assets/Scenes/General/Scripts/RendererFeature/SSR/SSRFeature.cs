@@ -3,9 +3,8 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.RenderGraphModule.Util;
-using Unity.VisualScripting;
 
-public class DitheringFeature : ScriptableRendererFeature
+public class SSRFeature : ScriptableRendererFeature
 {
     
     [System.Serializable]
@@ -17,10 +16,10 @@ public class DitheringFeature : ScriptableRendererFeature
 
     public Settings settings;
 
-    class EdgeDetectionPass : ScriptableRenderPass
+    class SSRRenderPass : ScriptableRenderPass
     {
         private Settings sett;
-        public EdgeDetectionPass(Settings settings)
+        public SSRRenderPass(Settings settings)
         {
             sett = settings;
             requiresIntermediateTexture = true;
@@ -28,12 +27,7 @@ public class DitheringFeature : ScriptableRendererFeature
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            var stack = VolumeManager.instance.stack;
-            var customEffect = stack.GetComponent<DitheringVolumeComponent>();
-
-            if (!customEffect.IsActive() || customEffect.IsUnityNull())
-                return;
-
+            var cameraData = frameData.Get<UniversalCameraData>();
             var resourceData = frameData.Get<UniversalResourceData>();
 
             if (resourceData.isActiveTargetBackBuffer)
@@ -58,11 +52,11 @@ public class DitheringFeature : ScriptableRendererFeature
         }
     }
 
-    EdgeDetectionPass m_ScriptablePass;
+    SSRRenderPass m_ScriptablePass;
 
     public override void Create()
     {
-        m_ScriptablePass = new EdgeDetectionPass(settings);
+        m_ScriptablePass = new SSRRenderPass(settings);
         m_ScriptablePass.renderPassEvent = settings.renderPassEvent;
     }
 

@@ -11,6 +11,7 @@ public class EdgeDetectionVolumeComponent : VolumeComponent, IPostProcessCompone
     public FloatParameter outlineThickness = new FloatParameter(1.0f);
     public ColorParameter secondaryColor = new ColorParameter(Color.white);
     public BoolParameter useSceneColor = new BoolParameter(false);
+    public FloatParameter distance = new FloatParameter(1000f);
     
     public bool IsActive() {
         return _active.value && active;

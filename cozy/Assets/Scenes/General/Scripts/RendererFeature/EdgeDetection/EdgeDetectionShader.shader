@@ -21,6 +21,7 @@ Shader "Custom/RaymarchShader"
             uniform float _OutlineThickness;
             uniform float4 _SecondaryColor;
             uniform int _UseSceneColor;
+            uniform float _DistanceDivider;
 
             // Edge detection kernel that works by taking the sum of the squares of the differences between diagonally adjacent pixels (Roberts Cross).
             float RobertsCross(float3 samples[4])
@@ -54,6 +55,11 @@ Shader "Custom/RaymarchShader"
             float4 frag(Varyings input) : SV_Target
             {
                 float2 uv = input.texcoord;
+
+                float3 sceneColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, uv).rgb;
+
+                // return float4(lerp(float3(sceneDepth, sceneDepth, sceneDepth), sceneColor, 1), 1);
+
                 float2 texel_size = float2(1.0 / _ScreenParams.x, 1.0 / _ScreenParams.y);
             
                 const float half_width_f = floor(_OutlineThickness * 0.5);
@@ -71,12 +77,12 @@ Shader "Custom/RaymarchShader"
                 for (int i = 0; i < 4; i++) {
                     depth_samples[i] = SampleSceneDepth(uvs[i]);
                     normal_samples[i] = SampleSceneNormalsRemapped(uvs[i]);
-                    luminance_samples[i] = SampleSceneLuminance(uvs[i]);
+                    // luminance_samples[i] = SampleSceneLuminance(uvs[i]);
                 }
 
                 float edge_depth = RobertsCross(depth_samples);
                 float edge_normal = RobertsCross(normal_samples);
-                float edge_luminance = RobertsCross(luminance_samples);
+                // float edge_luminance = RobertsCross(luminance_samples);
 
                 float depth_threshold = 1 / 200.0f;
                 edge_depth = edge_depth > depth_threshold ? 1 : 0;
@@ -84,17 +90,23 @@ Shader "Custom/RaymarchShader"
                 float normal_threshold = 1 / 4.0f;
                 edge_normal = edge_normal > normal_threshold ? 1 : 0;
                 
-                float luminance_threshold = 1 / 0.5f;
-                edge_luminance = edge_luminance > luminance_threshold ? 1 : 0;
+                // float luminance_threshold = 1 / 0.5f;
+                // edge_luminance = edge_luminance > luminance_threshold ? 1 : 0;
 
-                float edge = max(edge_depth, max(edge_normal, edge_luminance));
+                float edge = max(edge_depth, edge_normal);
 
                 float3 secondaryColor;
                 if (_UseSceneColor == 1)
                     secondaryColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, uv).rgb;
                 else
                     secondaryColor = _SecondaryColor.rgb;
-                return float4(lerp(secondaryColor, _OutlineColor.rgb, edge), 1);
+
+                
+                float sceneDepth = SampleSceneDepth(uv);
+                float3 worldPos = ComputeWorldSpacePosition(uv, sceneDepth, UNITY_MATRIX_I_VP);
+                float distance =  1.0 - (length(worldPos - _WorldSpaceCameraPos.xyz) / _DistanceDivider);
+
+                return float4(lerp(secondaryColor, _OutlineColor.rgb, edge * distance), 1);
             }
 
             ENDHLSL

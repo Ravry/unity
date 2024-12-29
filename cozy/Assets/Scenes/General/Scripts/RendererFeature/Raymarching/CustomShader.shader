@@ -48,7 +48,6 @@ Shader "Custom/RaymarchShader"
                 float3 sceneColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, input.texcoord);
                 float sceneDepth = SampleSceneDepth(input.texcoord);
 
-
                 float3 worldPos = ComputeWorldSpacePosition(input.texcoord, sceneDepth, UNITY_MATRIX_I_VP);
                 float distanceDepth = length(worldPos - _WorldSpaceCameraPos.xyz);
 
@@ -89,7 +88,7 @@ Shader "Custom/RaymarchShader"
                 }
 
                 // return float4(sceneColor.rgb, 1);
-                return float4(lerp(sceneColor.rgb, float3(sceneDepth, sceneDepth, sceneDepth), 0), 1);
+                return float4(lerp(sceneColor.rgb, float3(sceneDepth, sceneDepth, sceneDepth), 1), 1);
             }
 
             ENDHLSL

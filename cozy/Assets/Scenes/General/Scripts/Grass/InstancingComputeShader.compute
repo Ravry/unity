@@ -14,7 +14,7 @@ void CSMain(uint3 id : SV_DispatchThreadID) {
     uint index = id.x + id.y * _Resolution;
     float halfRes = (_Resolution / 2.0f);
     float3 position = _CenterPosition + float3(id.x - halfRes, 0.0f, id.y - halfRes);
-    float scale = 1.0f + (index % 10) * 0.1f;
+    float scale = 1.0f;
     float angle = (index % 360) * 3.14159265 / 180.0f;
 
     float4x4 rotation = float4x4(

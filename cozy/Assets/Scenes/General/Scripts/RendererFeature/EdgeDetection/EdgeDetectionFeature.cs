@@ -3,7 +3,6 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.RenderGraphModule.Util;
-using Mono.Cecil;
 using Unity.VisualScripting;
 
 public class EdgeDetectionFeature : ScriptableRendererFeature
@@ -31,7 +30,7 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
         {
             var stack = VolumeManager.instance.stack;
             var customEffect = stack.GetComponent<EdgeDetectionVolumeComponent>();
-            customEffect.IsSceneBound();
+
             if (!customEffect.IsActive() || customEffect.IsUnityNull())
                 return;
 
@@ -39,6 +38,7 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
             sett.material.SetFloat("_OutlineThickness", customEffect.outlineThickness.value);
             sett.material.SetColor("_SecondaryColor", customEffect.secondaryColor.value);
             sett.material.SetInt("_UseSceneColor", customEffect.useSceneColor.value ? 1 : 0);
+            sett.material.SetFloat("_DistanceDivider", customEffect.distance.value);
 
             var resourceData = frameData.Get<UniversalResourceData>();
 
