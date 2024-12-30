@@ -1,46 +1,37 @@
 using System.Collections.Generic;
-using DG.Tweening;
-using TMPro;
+using Unity.Cinemachine;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
 public class PlayerStateMachine : Statemachine<EPlayerStates>
 {
     public static PlayerStateMachine instance;
-    
-    [Header("Player")]
-    public Vector3 camOfffset;
-    public float camResetTime = .1f;
-    public LayerMask playerLayerMask;
-    public Transform groundCheck;
+
+    [Header("Camera")]
     public Transform cam;
+    public CinemachineCamera cinemachineCamera;
+    public float turnSmoothT = .1f;
+    
+
+    [Header("Player")]
+    public LayerMask playerLayerMask;
     public CharacterController controller;
-    public float gravity = 20.0f;
     public float speed = 8.0f;
     public float sprintMultiplier = 1.5f;
     public float jumpHeight = 2.0f;
-    public float groundDistance = .2f;
+    public Transform groundCheck;
     public LayerMask groundMask;
+    public float groundDistance = .2f;
+    public float gravity = 30.0f;
 
-    [Header("View Bobbing")]
-    public float bobFrequency = 2.0f;
-    public float bobAmplitude = 0.1f;
-
-    [Header("Interact")]
-    public TMP_Text interactText;
-    public float interactFadeDuration = .2f;
-    public float maxDistance = 2.0f;
+    [Header("Animation")]
+    public Animator animator;
 
     public KeyCodes keyCodes;
 
     [HideInInspector] public Vector3 inputVec;
-    [HideInInspector] public Vector3 mouseVec;
-    [HideInInspector] public float pitch, yaw;
     [HideInInspector] public float currentSpeedMultiplier;
-    [HideInInspector] public Vector3 velocity;
     [HideInInspector] public bool grounded;
-    [HideInInspector] public RaycastHit raycastHit;
-    [HideInInspector] public BaseInteractable interactable;
+    [HideInInspector] public Vector3 velocity;
 
     public override void ReloadStates()
     {
@@ -61,8 +52,10 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
         states = new Dictionary<EPlayerStates, IState<EPlayerStates>>();
         states.Add(EPlayerStates.Idle, new PlayerIdleState());
         states.Add(EPlayerStates.Walk, new PlayerWalkState());
+        states.Add(EPlayerStates.Run, new PlayerRunState());
         states.Add(EPlayerStates.Fall, new PlayerFallState());
         currentState = states[EPlayerStates.Idle];
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public override void UpdateVars()
@@ -72,28 +65,23 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
             0,
             Input.GetAxisRaw("Vertical")
         );
-
-        mouseVec = new Vector3(
-            Input.GetAxisRaw("Mouse X"),
-            Input.GetAxisRaw("Mouse Y"),
-            0
-        );
-
         HandleGroundCheck();
-        HandleInteractable();
+        HandleCameraShake();
     }
-
-    public void HandleMouseInput() {
-        pitch -= mouseVec.y;
-        pitch = Mathf.Clamp(pitch, -80.0f, 80.0f);
-        yaw += mouseVec.x;
-        cam.rotation = Quaternion.Euler(pitch, yaw, 0);
-        transform.rotation = Quaternion.Euler(0, yaw, 0);
-    }
-
+    
+    private float turnSmoothVelocity;
     public void HandleKeyboardMovement() {
         Vector3 normalizedInput = inputVec.normalized;
-        Vector3 move = transform.right * normalizedInput.x + transform.forward * normalizedInput.z;
+        
+        if (normalizedInput.magnitude <= 0)
+            return;
+
+        float targetAngle = Mathf.Atan2(normalizedInput.x, normalizedInput.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothT);
+        transform.rotation = Quaternion.Euler(0, angle, 0);
+
+        Vector3 moveForwardDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+        Vector3 move = moveForwardDir;
         currentSpeedMultiplier = Input.GetKey(keyCodes.sprintKey) ? sprintMultiplier : 1f;
         move *= Time.deltaTime * speed * currentSpeedMultiplier;
         controller.Move(move);
@@ -102,13 +90,12 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     public void HandleStationaryInput() {
         if (Input.GetKeyDown(keyCodes.jumpKey))
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * 2f * gravity);
+            velocity.y = Mathf.Sqrt(gravity * 2f * jumpHeight);
         }
+    }
 
-        if (Input.GetKeyDown(keyCodes.interactKey))
-        {
-            interactable?.interact();
-        }
+    public void HandleGroundCheck() {
+        grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
     }
 
     public void HandleGravity() {
@@ -118,33 +105,34 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
         controller.Move(velocity * Time.deltaTime);
     }
 
-    public void HandleGroundCheck() {
-        grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-    }
-
-    public void HandleStopViewBobbing() {
-        cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, camOfffset, camResetTime * Time.deltaTime);
-    }
-
-    private void HandleInteractable() {
-        Physics.Raycast(cam.transform.position, cam.transform.forward, out raycastHit, maxDistance, ~playerLayerMask);
-        BaseInteractable hitInteractable = raycastHit.transform?.gameObject.GetComponent<BaseInteractable>();
-        
-        if (hitInteractable != null) {
-            interactable = hitInteractable;
-            if (interactable.canInteract)
-                interactText.DOFade(1, interactFadeDuration);
-            else 
-                interactText.DOFade(.2f, interactFadeDuration);
-        }
-        else {
-            interactable = null;
-            interactText.DOFade(0, interactFadeDuration);
-        } 
-    }
-
     public System.Type GetCurrentState() {
         return currentState.GetType();
+    }
+
+    struct CineShake {
+        public float startTime;
+        public float shakeTimer;
+        public float shakeIntensity;
+    }
+
+    private CineShake shakeParams;
+
+    public void CameraShake(float intensity, float time)
+    {
+        CinemachineBasicMultiChannelPerlin cineNoise = cinemachineCamera.GetComponent<CinemachineBasicMultiChannelPerlin>();
+        cineNoise.AmplitudeGain = intensity;
+        shakeParams.shakeTimer = time;
+        shakeParams.startTime = time;
+        shakeParams.shakeIntensity = intensity;
+    }
+
+    public void HandleCameraShake() {
+        if (shakeParams.shakeTimer > 0)
+        {
+            CinemachineBasicMultiChannelPerlin cineNoise = cinemachineCamera.GetComponent<CinemachineBasicMultiChannelPerlin>();
+            shakeParams.shakeTimer -= Time.deltaTime;
+            cineNoise.AmplitudeGain = Mathf.Lerp(0, shakeParams.shakeIntensity, shakeParams.shakeTimer / shakeParams.startTime);
+        }
     }
 
     void OnDrawGizmos() {

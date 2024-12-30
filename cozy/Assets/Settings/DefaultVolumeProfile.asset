@@ -30,7 +30,7 @@ MonoBehaviour:
     m_Value: 1
   distance:
     m_OverrideState: 1
-    m_Value: 40
+    m_Value: 10
 --- !u!114 &-1705746752957806914
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -138,4 +138,4 @@ MonoBehaviour:
   active: 1
   _active:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0

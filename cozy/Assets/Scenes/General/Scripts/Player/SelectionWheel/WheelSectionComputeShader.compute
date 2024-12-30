@@ -1,0 +1,41 @@
+#pragma kernel CSMain
+
+
+RWStructuredBuffer<float4> Result;
+
+uint _TextureResolution;
+float _StartAngle;
+float _EndAngle; 
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    uint x = id.x;
+    uint y = id.y;
+
+    if (x >= _TextureResolution || y >= _TextureResolution)
+        return;
+
+    float outerRadius = _TextureResolution / 2.0f;
+    float innerRadius = outerRadius * 0.4f;
+    float2 center = float2(_TextureResolution/2, _TextureResolution/2);
+    float2 pixelPos = float2(x, y) - center;
+
+    float distance = length(pixelPos);
+    float angle = atan2(pixelPos.y, pixelPos.x);
+
+    if (angle < 0)
+        angle += 2.0f * 3.14159265359f;
+
+    uint index = id.y * _TextureResolution + id.x;
+
+    if (distance >= innerRadius && distance <= outerRadius &&
+        angle >= _StartAngle && angle < _EndAngle)
+    {
+        Result[index] = float4(1, 1, 1, 1);
+    }
+    else
+    {
+        Result[index] = float4(0, 0, 0, 0);
+    }
+}

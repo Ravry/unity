@@ -11,23 +11,26 @@ public class InstancingManager : MonoBehaviour
     [SerializeField] private Mesh mesh;
     [SerializeField] private Material material;
     [SerializeField] private int size = 8;
+    [SerializeField] private float density = 2.0f;
 
     private ComputeBuffer instanceBuffer;
     private Matrix4x4[] matrices;
 
 
     void Start() {
-        int totalInstances = size * size;
+        int densSize = (int)(size * density);
+        int totalInstances = densSize * densSize;
         matrices = new Matrix4x4[totalInstances];
         
         computeShader.SetVector("_CenterPosition", transform.position);
         computeShader.SetInt("_Resolution", size);
+        computeShader.SetFloat("_Density", density);
         
         instanceBuffer = new ComputeBuffer(totalInstances, sizeof(float) * 16);
         computeShader.SetBuffer(0, "instanceBuffer", instanceBuffer);
 
         int kernel = computeShader.FindKernel("CSMain");
-        computeShader.Dispatch(kernel, size / 8, size / 8, 1);
+        computeShader.Dispatch(kernel, densSize / 8, densSize / 8, 1);
 
         InstanceData[] instanceData = new InstanceData[totalInstances];
         instanceBuffer.GetData(instanceData);

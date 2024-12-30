@@ -104,9 +104,12 @@ Shader "Custom/RaymarchShader"
                 
                 float sceneDepth = SampleSceneDepth(uv);
                 float3 worldPos = ComputeWorldSpacePosition(uv, sceneDepth, UNITY_MATRIX_I_VP);
-                float distance =  1.0 - (length(worldPos - _WorldSpaceCameraPos.xyz) / _DistanceDivider);
+                float distance =  length(worldPos - _WorldSpaceCameraPos.xyz);
 
-                return float4(lerp(secondaryColor, _OutlineColor.rgb, edge * distance), 1);
+                if (distance > _DistanceDivider || distance < .8)
+                    return float4(secondaryColor, 1);
+
+                return float4(lerp(secondaryColor, _OutlineColor.rgb, edge), 1);
             }
 
             ENDHLSL

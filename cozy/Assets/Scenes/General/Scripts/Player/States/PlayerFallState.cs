@@ -5,27 +5,28 @@ using UnityEngine;
 public class PlayerFallState : BaseState<EPlayerStates>
 {
     public static PlayerStateMachine PSM => PlayerStateMachine.instance;
-    private float fallDistance = 0;
+    private float startPosY = 0;
 
 
     public override void EnterState()
     {
-        Physics.Raycast(PSM.groundCheck.position, Vector3.down, out RaycastHit hit, 500.0f, PSM.groundMask);
-        fallDistance = hit.distance;
-        Cursor.lockState = CursorLockMode.Locked;
+        PSM.animator.CrossFade("fall", .05f);
+        startPosY = PSM.transform.position.y;
     }
 
     public override void Update()
     {
-        PSM.HandleMouseInput();
         PSM.HandleKeyboardMovement();
         PSM.HandleGravity();
-        PSM.HandleStopViewBobbing();
     }
 
     public override void ExitState()
     {
-        // PSM.cam.localPosition = PSM.camOfffset + Vector3.down * .2f;
+        float endPosY = PSM.transform.position.y;
+        float fallDistance = endPosY - startPosY;
+
+        if (fallDistance < -2.0f)
+            PSM.CameraShake(fallDistance, .5f);
     }
 
     public override EPlayerStates CheckState()

@@ -1,20 +1,25 @@
 using System.Collections.Generic;
 using DG.Tweening;
-using Unity.VisualScripting;
+using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.SocialPlatforms.GameCenter;
 using UnityEngine.UI;
 
 public class RadialSelectionWheel : MonoBehaviour
 {
+    [Header("Wheel Settings")]
     [SerializeField] private GameObject wheel;
     [SerializeField] private List<Texture> itemIcon;
     [SerializeField] private RectTransform wheelCenter;
     [SerializeField] private float radius = 100f;
     [SerializeField] private Color[] sliceColors;
+    
+    [Header("Compute Settings")]
+    [SerializeField] private ComputeShader computeShader;
+
+
     private List<(Image, Image)> slices = new List<(Image, Image)>();
     private float perItemAngle;
+
 
     void Start()
     {
@@ -33,88 +38,76 @@ public class RadialSelectionWheel : MonoBehaviour
 
         perItemAngle = 360.0f / itemCount;
 
+        Sprite sliceSprite = CreateSliceSprite(1024 / 32, 1024 / 32, perItemAngle, perItemAngle);
+
         for (int i = 0; i < itemCount; i++)
         {
-            // Create a new Image object for the slice
             Image sliceImage = new GameObject("Slice " + i, typeof(Image)).GetComponent<Image>();
             sliceImage.transform.SetParent(wheelCenter, false);
-            sliceImage.sprite = CreateSliceSprite(perItemAngle, i * perItemAngle);
+            sliceImage.sprite = sliceSprite;
             sliceImage.color = sliceColors[i % sliceColors.Length];
             sliceImage.rectTransform.sizeDelta = new Vector2(radius * 2, radius * 2);
             sliceImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            float rotAngle = i * perItemAngle - perItemAngle;
+            sliceImage.rectTransform.localRotation = Quaternion.Euler(0, 0, rotAngle);
 
-            // Create an Image for the item icon and assign it to the slice
             Image iconImage = new GameObject("Icon " + i, typeof(Image)).GetComponent<Image>();
-            iconImage.transform.SetParent(sliceImage.transform, false); // Set the icon as a child of the slice
-            iconImage.sprite = TextureToSprite(itemIcon[i]); // Convert Texture to Sprite and assign
-            iconImage.rectTransform.sizeDelta = new Vector2(radius * .4f, radius * .4f); // Adjust size of icon
+            iconImage.transform.SetParent(sliceImage.transform, false);
+            iconImage.sprite = TextureToSprite(itemIcon[i]);
+            iconImage.rectTransform.sizeDelta = new Vector2(radius * .4f, radius * .4f);
+            iconImage.rectTransform.localRotation = Quaternion.Euler(0, 0, -rotAngle);
 
-            // Calculate position for the icon within the slice
-            float angleOffset = (perItemAngle * i) + (perItemAngle / 2); // Offset to place icon in the middle of the slice
-
-            // Convert the angle to radians
+            float angleOffset = (perItemAngle / 2) + perItemAngle;
             float angleInRadians = Mathf.Deg2Rad * angleOffset;
 
-            // Calculate the position of the icon based on the angle
-            Vector2 iconPosition = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians)) * (radius * 0.7f); // Half radius offset for the icon
+            Vector2 iconPosition = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians)) * (radius * 0.7f);
             iconImage.rectTransform.localPosition = iconPosition;
-
-            
+             
             slices.Add((sliceImage, iconImage));
         }
     }
 
     Sprite TextureToSprite(Texture texture)
     {
-        return Sprite.Create((Texture2D)texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        return Sprite.Create(texture as Texture2D, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
     }
 
-    Sprite CreateSliceSprite(float sliceAngle, float startAngle)
+    Sprite CreateSliceSprite(int textureWidth, int textureHeight, float sliceAngle, float startAngle)
     {
-        int textureWidth = 1024;
-        int textureHeight = 1024;
-        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Texture2D resultTexture = new Texture2D(textureWidth, textureHeight);
 
-        Color[] transparentPixels = new Color[textureWidth * textureHeight];
-        for (int i = 0; i < transparentPixels.Length; i++)
-        {
-            transparentPixels[i] = Color.clear;
-        }
-        texture.SetPixels(transparentPixels);
+        ComputeBuffer buffer = new ComputeBuffer(textureWidth * textureHeight, sizeof(float) * 4);
 
-        Vector2 center = new Vector2(textureWidth / 2f, textureHeight / 2f);
-        float outerRadius = textureWidth / 2f;
-        float innerRadius = outerRadius * 0.4f;
+        int kernelIndex = computeShader.FindKernel("CSMain");
+        computeShader.SetBuffer(kernelIndex, "Result", buffer);
 
+        computeShader.SetInt("_TextureResolution", textureWidth);
         float startAngleRad = Mathf.Deg2Rad * startAngle;
         float endAngleRad = Mathf.Deg2Rad * (startAngle + sliceAngle);
+        computeShader.SetFloat("_StartAngle", startAngleRad);
+        computeShader.SetFloat("_EndAngle", endAngleRad);
 
-        for (int y = 0; y < textureHeight; y++)
-        {
-            for (int x = 0; x < textureWidth; x++)
-            {
-                Vector2 pixelPos = new Vector2(x, y) - center;
-                float distance = pixelPos.magnitude;
-                float angle = Mathf.Atan2(pixelPos.y, pixelPos.x);
+        int threadGroupsX = Mathf.CeilToInt(textureWidth / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(textureHeight / 8.0f);
 
-                if (angle < 0)
-                    angle += 2 * Mathf.PI;
+        computeShader.Dispatch(kernelIndex, threadGroupsX, threadGroupsY, 1);
+        
+        Color[] colors = new Color[textureWidth * textureWidth];
+        buffer.GetData(colors);
 
-                if (distance >= innerRadius && distance <= outerRadius && angle >= startAngleRad && angle < endAngleRad)
-                {
-                    texture.SetPixel(x, y, Color.white);
-                }
-            }
-        }
+        resultTexture.SetPixels(colors);
+        resultTexture.Apply();
 
-        texture.Apply();
+        buffer.Release();
 
-        return Sprite.Create(texture, new Rect(0, 0, textureWidth, textureHeight), new Vector2(0.5f, 0.5f));
+        return Sprite.Create(resultTexture, new Rect(0, 0, textureWidth, textureHeight), new Vector2(0.5f, 0.5f));
     }
 
     void Update() {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
+            Cursor.lockState = CursorLockMode.Confined  ;
+            Cursor.visible = true;
             wheel.SetActive(true);
             for (int i = 0; i < slices.Count; i++)
             {
@@ -126,6 +119,8 @@ public class RadialSelectionWheel : MonoBehaviour
             
         if (Input.GetKeyUp(KeyCode.Tab))
         {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             wheel.SetActive(false);
         }
 
@@ -150,5 +145,4 @@ public class RadialSelectionWheel : MonoBehaviour
             slices[i].Item1.color = color;
         }
     }
-
 }

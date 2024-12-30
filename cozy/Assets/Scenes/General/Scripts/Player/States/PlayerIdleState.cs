@@ -9,15 +9,13 @@ public class PlayerIdleState : BaseState<EPlayerStates>
 
     public override void EnterState()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        PSM.animator.CrossFade("idle", .2f);
     }
 
     public override void Update()
     {
-        PSM.HandleMouseInput();
         PSM.HandleStationaryInput();
         PSM.HandleGravity();
-        PSM.HandleStopViewBobbing();
     }
 
     public override EPlayerStates CheckState()

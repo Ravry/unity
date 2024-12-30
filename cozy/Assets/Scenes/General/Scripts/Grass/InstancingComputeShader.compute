@@ -8,12 +8,15 @@ struct InstanceData {
 RWStructuredBuffer<InstanceData> instanceBuffer;
 uniform uint _Resolution;
 uniform float3 _CenterPosition;
+uniform float _Density;
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID) {
-    uint index = id.x + id.y * _Resolution;
+    uint index = id.x + id.y * _Resolution * _Density;
     float halfRes = (_Resolution / 2.0f);
-    float3 position = _CenterPosition + float3(id.x - halfRes, 0.0f, id.y - halfRes);
+    float density = 1.0f/_Density;
+
+    float3 position = _CenterPosition + float3((id.x * density) - halfRes, 0.0f, (id.y * density) - halfRes);
     float scale = 1.0f;
     float angle = (index % 360) * 3.14159265 / 180.0f;
 
