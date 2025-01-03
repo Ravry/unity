@@ -5,7 +5,14 @@ using UnityEngine;
 
 public abstract class BaseState<EStates> : IState<EStates> where EStates : Enum
 {
+    public EStates eState;
     public abstract EStates CheckState();
+
+
+    public BaseState(EStates eState)
+    {
+        this.eState = eState; 
+    }
 
     public virtual void EnterState()
     {

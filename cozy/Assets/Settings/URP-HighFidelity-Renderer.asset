@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ef8012b95af7794aa03ad973ed48a94, type: 3}
   m_Name: CustomFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 550
     material: {fileID: 2100000, guid: 78b04ab05b8b42349b76f5186f3bc3fd, type: 2}
@@ -47,6 +47,27 @@ MonoBehaviour:
   settings:
     renderPassEvent: 550
     material: {fileID: 2100000, guid: 395df0c4f5f16fb4297ec4e17da62c3c, type: 2}
+--- !u!114 &-3555040593866257911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1614fc811f8f184697d9bee70ab9fe5, type: 3}
+  m_Name: DecalRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  m_Settings:
+    technique: 0
+    maxDrawDistance: 1000
+    decalLayers: 0
+    dBufferSettings:
+      surfaceData: 2
+    screenSpaceSettings:
+      normalBlend: 0
 --- !u!114 &-1878332245247344467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59,7 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
   m_Name: SSAO
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   m_Settings:
     AOMethod: 1
     Downsample: 0
@@ -113,7 +134,8 @@ MonoBehaviour:
   - {fileID: -8180274706553307608}
   - {fileID: 2405429626654894099}
   - {fileID: 6518345680114940525}
-  m_RendererFeatureMap: adc0de57c6d2eee528fec6ce7ed3798e1328f73c80cd61216dfa7342dcd0755a
+  - {fileID: -3555040593866257911}
+  m_RendererFeatureMap: adc0de57c6d2eee528fec6ce7ed3798e1328f73c80cd61216dfa7342dcd0755a090a82506af5a9ce
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -151,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c36b463f1b043a44ba760d3c5b05a8d, type: 3}
   m_Name: EdgeDetectionFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 550
     material: {fileID: 2100000, guid: d25b0d937c0324142a472a7f21209893, type: 2}
@@ -167,7 +189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e28ee5c44a1d1c949814650315bfca33, type: 3}
   m_Name: DitheringFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 550
     material: {fileID: 2100000, guid: 541ba4c54e9d59d44ba9c63a9250362b, type: 2}

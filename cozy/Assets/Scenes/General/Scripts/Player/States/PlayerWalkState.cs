@@ -4,26 +4,37 @@ using UnityEngine;
 
 public class PlayerWalkState : BaseState<EPlayerStates>
 {
+    public PlayerWalkState(EPlayerStates eState) : base(eState)
+    {
+    }
+
     public static PlayerStateMachine PSM => PlayerStateMachine.instance;
 
     public override void EnterState()
     {
         PSM.animator.CrossFade("walk", .05f);
+        PSM.currentSpeedMultiplier = 1.0f;
     }
 
     public override void Update()
     {
-        PSM.HandleKeyboardMovement();
-        PSM.HandleGravity();
+        PSM.HandleRotation(true);
         PSM.HandleStationaryInput();
+    }
+
+    public override void FixedUpdate()
+    {
+        PSM.HandleKeyboardMovement(true);
     }
 
     public override EPlayerStates CheckState()
     {
         if (PSM.inputVec.magnitude == 0)
             return EPlayerStates.Idle;
-        else if (PSM.currentSpeedMultiplier == PSM.sprintMultiplier)
+        else if (Input.GetKey(PSM.keyCodes.sprintKey))
             return EPlayerStates.Run;
+        else if (Input.GetKey(PSM.keyCodes.aimKey) || Input.GetKey(PSM.keyCodes.shootKey))
+                return EPlayerStates.StrafeWalk;
 
         if (!PSM.grounded)
             return EPlayerStates.Fall;

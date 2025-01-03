@@ -1,0 +1,28 @@
+#pragma kernel CSMain
+
+RWTexture2D<float4> Result;
+
+float2 resolution;
+float4 color;
+float thickness;
+float2 size;
+int shape;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    float4 pixelColor = float4(0, 0, 0, 0);
+    float2 uv = id.xy / resolution;
+    float2 ndc = (uv.xy * 2.0f) - 1.0f;
+    if (ndc.x > -size.x && ndc.x < size.x && ndc.y > -size.y && ndc.y < size.y)
+    {
+        if (shape == 0)
+        {
+            if (abs(uv.x - 0.5) < thickness * size.x || abs(uv.y - 0.5) < thickness * size.y)
+            {
+                pixelColor = color;
+            }
+        }
+    }
+    Result[id.xy] = pixelColor;
+}

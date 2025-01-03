@@ -1,38 +1,45 @@
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 public class PlayerStateMachine : Statemachine<EPlayerStates>
 {
     public static PlayerStateMachine instance;
 
     [Header("Camera")]
-    public Transform cam;
-    public CinemachineCamera cinemachineCamera;
-    public float turnSmoothT = .1f;
+    public CameraHandler cameraHandler;
     
 
     [Header("Player")]
-    public LayerMask playerLayerMask;
-    public CharacterController controller;
+    public Rigidbody rb;
+    public float turnSmoothTime = .1f;
     public float speed = 8.0f;
-    public float sprintMultiplier = 1.5f;
-    public float jumpHeight = 2.0f;
-    public Transform groundCheck;
-    public LayerMask groundMask;
-    public float groundDistance = .2f;
-    public float gravity = 30.0f;
+    public float jumpHeight = 2.0f, groundDistance = .2f;
+    public Transform groundCheck; 
+    public LayerMask groundMask, playerLayerMask;
+
 
     [Header("Animation")]
     public Animator animator;
+    public RigBuilder rigBuilder;
 
+
+    [Header("Weapon")]
+    public Weapon weapon;
+    public GameObject bulletHolePrefab;
+
+
+    [Header("KeyCodes")]
     public KeyCodes keyCodes;
 
     [HideInInspector] public Vector3 inputVec;
     [HideInInspector] public float currentSpeedMultiplier;
     [HideInInspector] public bool grounded;
-    [HideInInspector] public Vector3 velocity;
-
+    [HideInInspector] public bool crouching;
+    [HideInInspector] public float turnSmoothVelocity;
+    [HideInInspector] public Vector3 normalizedInput;
+    
     public override void ReloadStates()
     {
         if (states == null || states.Count == 0)
@@ -48,12 +55,16 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
 
     public override void SetupStates()
     {
+        rb.freezeRotation = true;
         instance = this;
-        states = new Dictionary<EPlayerStates, IState<EPlayerStates>>();
-        states.Add(EPlayerStates.Idle, new PlayerIdleState());
-        states.Add(EPlayerStates.Walk, new PlayerWalkState());
-        states.Add(EPlayerStates.Run, new PlayerRunState());
-        states.Add(EPlayerStates.Fall, new PlayerFallState());
+        states = new Dictionary<EPlayerStates, BaseState<EPlayerStates>>();
+        states.Add(EPlayerStates.Idle, new PlayerIdleState(EPlayerStates.Idle));
+        states.Add(EPlayerStates.Walk, new PlayerWalkState(EPlayerStates.Walk));
+        states.Add(EPlayerStates.Run, new PlayerRunState(EPlayerStates.Run));
+        states.Add(EPlayerStates.Fall, new PlayerFallState(EPlayerStates.Fall));
+        states.Add(EPlayerStates.CrouchIdle, new PlayerCrouchIdleState(EPlayerStates.CrouchIdle));
+        states.Add(EPlayerStates.CrouchWalk, new PlayerCrouchWalkState(EPlayerStates.CrouchWalk));
+        states.Add(EPlayerStates.StrafeWalk, new PlayerStrafeState(EPlayerStates.StrafeWalk));
         currentState = states[EPlayerStates.Idle];
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -66,75 +77,52 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
             Input.GetAxisRaw("Vertical")
         );
         HandleGroundCheck();
-        HandleCameraShake();
+        cameraHandler.HandleCameraShake();
+        normalizedInput = inputVec.normalized;
     }
     
-    private float turnSmoothVelocity;
-    public void HandleKeyboardMovement() {
-        Vector3 normalizedInput = inputVec.normalized;
-        
-        if (normalizedInput.magnitude <= 0)
-            return;
 
-        float targetAngle = Mathf.Atan2(normalizedInput.x, normalizedInput.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothT);
-        transform.rotation = Quaternion.Euler(0, angle, 0);
+    public void HandleKeyboardMovement(bool faceTowardsCamera) {
+        Vector3 targetVel = Vector3.zero;
 
-        Vector3 moveForwardDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
-        Vector3 move = moveForwardDir;
-        currentSpeedMultiplier = Input.GetKey(keyCodes.sprintKey) ? sprintMultiplier : 1f;
-        move *= Time.deltaTime * speed * currentSpeedMultiplier;
-        controller.Move(move);
+        if (faceTowardsCamera)
+        {
+            float targetAngle = HandleRotation(faceTowardsCamera);
+            Vector3 moveForwardDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+            targetVel = moveForwardDir * speed;
+        }
+        targetVel.y = rb.linearVelocity.y;
+
+        Vector3 velDiff = targetVel - rb.linearVelocity;
+        velDiff.y = 0;
+
+        rb.AddForce(velDiff, ForceMode.VelocityChange);
+    }
+
+    public float HandleRotation(bool faceTowardsCamera) {
+        Vector3 forward = Vector3.ProjectOnPlane(cameraHandler.transform.forward, Vector3.up);
+        Quaternion desiredRotation = Quaternion.LookRotation(forward, Vector3.up);
+        rb.rotation = desiredRotation;
+        return 0;
     }
 
     public void HandleStationaryInput() {
         if (Input.GetKeyDown(keyCodes.jumpKey))
+        {    
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+        }
+
+        if (Input.GetKeyDown(keyCodes.crouchKey))
         {
-            velocity.y = Mathf.Sqrt(gravity * 2f * jumpHeight);
+            crouching = !crouching;
         }
     }
 
     public void HandleGroundCheck() {
         grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
     }
-
-    public void HandleGravity() {
-        velocity.y += -gravity * Time.deltaTime;
-        if (grounded && velocity.y < 0)
-            velocity.y = -2f;
-        controller.Move(velocity * Time.deltaTime);
-    }
-
-    public System.Type GetCurrentState() {
-        return currentState.GetType();
-    }
-
-    struct CineShake {
-        public float startTime;
-        public float shakeTimer;
-        public float shakeIntensity;
-    }
-
-    private CineShake shakeParams;
-
-    public void CameraShake(float intensity, float time)
-    {
-        CinemachineBasicMultiChannelPerlin cineNoise = cinemachineCamera.GetComponent<CinemachineBasicMultiChannelPerlin>();
-        cineNoise.AmplitudeGain = intensity;
-        shakeParams.shakeTimer = time;
-        shakeParams.startTime = time;
-        shakeParams.shakeIntensity = intensity;
-    }
-
-    public void HandleCameraShake() {
-        if (shakeParams.shakeTimer > 0)
-        {
-            CinemachineBasicMultiChannelPerlin cineNoise = cinemachineCamera.GetComponent<CinemachineBasicMultiChannelPerlin>();
-            shakeParams.shakeTimer -= Time.deltaTime;
-            cineNoise.AmplitudeGain = Mathf.Lerp(0, shakeParams.shakeIntensity, shakeParams.shakeTimer / shakeParams.startTime);
-        }
-    }
-
+    
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundDistance);

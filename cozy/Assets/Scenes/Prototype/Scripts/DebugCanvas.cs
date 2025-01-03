@@ -42,8 +42,5 @@ public class DebugCanvas : MonoBehaviour
             else 
                 SlideOut();
         }
-
-        playerGrounded_D.text = PlayerStateMachine.instance.grounded.ToString();
-        playerState_D.text = PlayerStateMachine.instance.GetCurrentState().ToString();
     } 
 }

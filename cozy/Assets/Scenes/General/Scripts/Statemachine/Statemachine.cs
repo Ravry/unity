@@ -5,8 +5,8 @@ using UnityEngine;
 
 public abstract class Statemachine<EStates> : MonoBehaviour where EStates : Enum
 {
-    protected Dictionary<EStates, IState<EStates>> states;
-    protected IState<EStates> currentState;
+    protected Dictionary<EStates, BaseState<EStates>> states;
+    public BaseState<EStates> currentState;
 
     public abstract void SetupStates();
     public abstract void ReloadStates();
@@ -31,13 +31,13 @@ public abstract class Statemachine<EStates> : MonoBehaviour where EStates : Enum
     {
         UpdateVars();
         EStates estate = currentState.CheckState();
-        IState<EStates> istate = states[estate]; 
+        BaseState<EStates> istate = states[estate]; 
         if (istate != currentState)
             SwitchState(istate);
         currentState.Update();
     }
 
-    void SwitchState(IState<EStates> state) {
+    void SwitchState(BaseState<EStates> state) {
         currentState.ExitState();
         currentState = state;
         currentState.EnterState();

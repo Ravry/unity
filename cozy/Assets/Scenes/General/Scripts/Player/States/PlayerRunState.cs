@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PlayerRunState : BaseState<EPlayerStates>
 {
+    public PlayerRunState(EPlayerStates eState) : base(eState)
+    {
+    }
+
     public static PlayerStateMachine PSM => PlayerStateMachine.instance;
 
     public override void EnterState()
@@ -13,20 +17,23 @@ public class PlayerRunState : BaseState<EPlayerStates>
 
     public override void Update()
     {
-        PSM.HandleKeyboardMovement();
-        PSM.HandleGravity();
+        PSM.HandleRotation(true);
         PSM.HandleStationaryInput();
+    }
+
+    public override void FixedUpdate() {
+        PSM.HandleKeyboardMovement(true);
     }
 
     public override EPlayerStates CheckState()
     {
-        if (PSM.inputVec.magnitude == 0)
-            return EPlayerStates.Idle;
-        else if (PSM.currentSpeedMultiplier != PSM.sprintMultiplier)
-            return EPlayerStates.Walk;
-
         if (!PSM.grounded)
             return EPlayerStates.Fall;
+
+        if (PSM.inputVec.magnitude == 0)
+            return EPlayerStates.Idle;
+        else
+            return EPlayerStates.Walk;
 
         return EPlayerStates.Run;
     }

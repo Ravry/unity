@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   targetFolder: Assets/Resources/Models/Character/Animations
-  referenceAvatar: {fileID: 9000000, guid: 6ae8e59f0c5277e41ab5e4654c247f2f, type: 3}
-  referenceFBX: {fileID: 919132149155446097, guid: 6ae8e59f0c5277e41ab5e4654c247f2f,
+  referenceAvatar: {fileID: 9000000, guid: 10038fdbf93c4dd43af9ce774d03a956, type: 3}
+  referenceFBX: {fileID: 919132149155446097, guid: 10038fdbf93c4dd43af9ce774d03a956,
     type: 3}
   enableTranslationDoF: 1
   animationType: 3

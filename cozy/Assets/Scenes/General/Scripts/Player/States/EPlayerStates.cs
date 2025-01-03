@@ -2,5 +2,8 @@ public enum EPlayerStates {
     Idle,
     Walk,
     Fall,
-    Run
+    Run,
+    CrouchIdle,
+    CrouchWalk,
+    StrafeWalk
 }

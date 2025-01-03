@@ -38,7 +38,7 @@ public class RadialSelectionWheel : MonoBehaviour
 
         perItemAngle = 360.0f / itemCount;
 
-        Sprite sliceSprite = CreateSliceSprite(1024 / 32, 1024 / 32, perItemAngle, perItemAngle);
+        Sprite sliceSprite = CreateSliceSprite(1024 / 1, 1024 / 1, perItemAngle, perItemAngle);
 
         for (int i = 0; i < itemCount; i++)
         {
@@ -64,6 +64,72 @@ public class RadialSelectionWheel : MonoBehaviour
             iconImage.rectTransform.localPosition = iconPosition;
              
             slices.Add((sliceImage, iconImage));
+        }
+    }
+
+    void UpdateWheel() 
+    {
+        int itemCount = itemIcon.Count;
+
+        if (itemCount == slices.Count)
+            return;
+
+        if (itemCount == 0)
+        {
+            Debug.LogError("No items to display in the radial selection wheel.");
+            return;
+        }
+        perItemAngle = 360.0f / itemCount;
+
+        Sprite sliceSprite = CreateSliceSprite(1024 / 1, 1024 / 1, perItemAngle, perItemAngle);
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            if (i < slices.Count)
+            {
+                Image sliceImage = slices[i].Item1;
+                sliceImage.sprite = sliceSprite;
+                sliceImage.color = sliceColors[i % sliceColors.Length];
+                sliceImage.rectTransform.sizeDelta = new Vector2(radius * 2, radius * 2);
+                sliceImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                float rotAngle = i * perItemAngle - perItemAngle;
+                sliceImage.rectTransform.localRotation = Quaternion.Euler(0, 0, rotAngle);
+
+                Image iconImage = slices[i].Item2;
+                iconImage.sprite = TextureToSprite(itemIcon[i]);
+                iconImage.rectTransform.sizeDelta = new Vector2(radius * .4f, radius * .4f);
+                iconImage.rectTransform.localRotation = Quaternion.Euler(0, 0, -rotAngle);
+
+                float angleOffset = (perItemAngle / 2) + perItemAngle;
+                float angleInRadians = Mathf.Deg2Rad * angleOffset;
+
+                Vector2 iconPosition = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians)) * (radius * 0.7f);
+                iconImage.rectTransform.localPosition = iconPosition;
+            }
+            else {
+                Image sliceImage = new GameObject("Slice " + i, typeof(Image)).GetComponent<Image>();
+                sliceImage.transform.SetParent(wheelCenter, false);
+                sliceImage.sprite = sliceSprite;
+                sliceImage.color = sliceColors[i % sliceColors.Length];
+                sliceImage.rectTransform.sizeDelta = new Vector2(radius * 2, radius * 2);
+                sliceImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                float rotAngle = i * perItemAngle - perItemAngle;
+                sliceImage.rectTransform.localRotation = Quaternion.Euler(0, 0, rotAngle);
+
+                Image iconImage = new GameObject("Icon " + i, typeof(Image)).GetComponent<Image>();
+                iconImage.transform.SetParent(sliceImage.transform, false);
+                iconImage.sprite = TextureToSprite(itemIcon[i]);
+                iconImage.rectTransform.sizeDelta = new Vector2(radius * .4f, radius * .4f);
+                iconImage.rectTransform.localRotation = Quaternion.Euler(0, 0, -rotAngle);
+
+                float angleOffset = (perItemAngle / 2) + perItemAngle;
+                float angleInRadians = Mathf.Deg2Rad * angleOffset;
+
+                Vector2 iconPosition = new Vector2(Mathf.Cos(angleInRadians), Mathf.Sin(angleInRadians)) * (radius * 0.7f);
+                iconImage.rectTransform.localPosition = iconPosition;
+                
+                slices.Add((sliceImage, iconImage));
+            }
         }
     }
 
@@ -106,7 +172,10 @@ public class RadialSelectionWheel : MonoBehaviour
     void Update() {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            Cursor.lockState = CursorLockMode.Confined  ;
+            #if UNITY_EDITOR
+            UpdateWheel();
+            #endif
+            Cursor.lockState = CursorLockMode.Confined;
             Cursor.visible = true;
             wheel.SetActive(true);
             for (int i = 0; i < slices.Count; i++)

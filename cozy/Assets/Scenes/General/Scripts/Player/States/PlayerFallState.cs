@@ -7,6 +7,9 @@ public class PlayerFallState : BaseState<EPlayerStates>
     public static PlayerStateMachine PSM => PlayerStateMachine.instance;
     private float startPosY = 0;
 
+    public PlayerFallState(EPlayerStates eState) : base(eState)
+    {
+    }
 
     public override void EnterState()
     {
@@ -16,17 +19,16 @@ public class PlayerFallState : BaseState<EPlayerStates>
 
     public override void Update()
     {
-        PSM.HandleKeyboardMovement();
-        PSM.HandleGravity();
     }
 
     public override void ExitState()
     {
+        // SoundManager.instance.Play("jumpland");
         float endPosY = PSM.transform.position.y;
         float fallDistance = endPosY - startPosY;
 
-        if (fallDistance < -2.0f)
-            PSM.CameraShake(fallDistance, .5f);
+        if (fallDistance < -.5f)
+            PSM.cameraHandler.CameraShake(fallDistance * 2.0f, .5f);
     }
 
     public override EPlayerStates CheckState()
