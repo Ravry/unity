@@ -18,8 +18,25 @@ public class SoundManager : MonoBehaviour
 
     public static SoundManager instance;
 
+    private void OnEnable()
+    {
+        print("on enable");
+        if (instance == null)
+        {
+            instance = this;
+        }
+    }
+
     public void Awake() {
+        if (instance != null)
+        {
+            Debug.LogWarning("Multiple SoundManager instances found. Destroying duplicate.", this);
+            Destroy(gameObject);
+            return;
+        }
+
         instance = this;
+        DontDestroyOnLoad(gameObject);
 
         foreach (var sound in sounds)
         {

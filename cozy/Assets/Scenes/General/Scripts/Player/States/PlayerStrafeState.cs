@@ -23,7 +23,7 @@ public class PlayerStrafeState : BaseState<EPlayerStates>
 
     public override void FixedUpdate()
     {
-        PSM.HandleKeyboardMovement(false);
+        PSM.HandleKeyboardMovement();
     }
 
     public override EPlayerStates CheckState()

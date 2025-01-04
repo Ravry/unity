@@ -67,7 +67,7 @@ public class WeaponStateMachine : Statemachine<EWeaponStates>
 
                 PSM.cameraHandler.cinemachineCamera.GetComponent<CinemachineOrbitalFollow>().VerticalAxis.Value -= PSM.weapon.shootRecoil;
                 PSM.cameraHandler.CameraShake(PSM.weapon.shootRecoil, PSM.weapon.shootDelay);
-                // SoundManager.instance.Play("shot", .8f, 1.2f);
+                SoundManager.instance.Play("shot", .8f, 1.2f);
         }
     }
 
@@ -88,7 +88,7 @@ public class WeaponStateMachine : Statemachine<EWeaponStates>
     public void HandlePlayerRotation() {
         if (PSM.currentState.eState == EPlayerStates.Idle)
         {
-            PSM.HandleRotation(true);
+            PSM.HandleRotation(false);
         }
     }
 

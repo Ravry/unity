@@ -13,10 +13,10 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
 
     [Header("Player")]
     public Rigidbody rb;
-    public float turnSmoothTime = .1f;
-    public float speed = 8.0f;
-    public float jumpHeight = 2.0f, groundDistance = .2f;
-    public Transform groundCheck; 
+    public float rotationSpeed = 20f;
+    public float moveSpeed = 3.0f, sprintMultiplier = 1.5f;
+    public float jumpForce = 2.0f, groundDistance = .2f, groundDrag = 2f;
+    public Transform orientation, playerObj, groundCheck; 
     public LayerMask groundMask, playerLayerMask;
 
 
@@ -33,9 +33,9 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     [Header("KeyCodes")]
     public KeyCodes keyCodes;
 
-    [HideInInspector] public Vector3 inputVec;
+    [HideInInspector] public Vector3 inputVec, inputDir;
     [HideInInspector] public float currentSpeedMultiplier;
-    [HideInInspector] public bool grounded;
+    [HideInInspector] public bool grounded, holdingSprintKey;
     [HideInInspector] public bool crouching;
     [HideInInspector] public float turnSmoothVelocity;
     [HideInInspector] public Vector3 normalizedInput;
@@ -71,46 +71,67 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
 
     public override void UpdateVars()
     {
+        holdingSprintKey = Input.GetKey(keyCodes.sprintKey);
         inputVec = new Vector3(
             Input.GetAxisRaw("Horizontal"),
             0,
             Input.GetAxisRaw("Vertical")
         );
+        inputDir = orientation.forward * inputVec.z + orientation.right * inputVec.x;
         HandleGroundCheck();
         cameraHandler.HandleCameraShake();
         normalizedInput = inputVec.normalized;
+
+        Temp();
+    }
+
+    private void Temp() {
+        Vector3 debugPos = transform.position + Vector3.up * 1.4f;
+        Vector3 currentVelocity = rb.linearVelocity;
+        currentVelocity.y = 0;
+        Debug.DrawRay(debugPos, currentVelocity, Color.black);
     }
     
 
-    public void HandleKeyboardMovement(bool faceTowardsCamera) {
-        Vector3 targetVel = Vector3.zero;
-
-        if (faceTowardsCamera)
-        {
-            float targetAngle = HandleRotation(faceTowardsCamera);
-            Vector3 moveForwardDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
-            targetVel = moveForwardDir * speed;
-        }
-        targetVel.y = rb.linearVelocity.y;
-
-        Vector3 velDiff = targetVel - rb.linearVelocity;
-        velDiff.y = 0;
-
-        rb.AddForce(velDiff, ForceMode.VelocityChange);
+    public void HandleKeyboardMovement() {
+        Vector3 moveDir = inputDir.normalized * moveSpeed * currentSpeedMultiplier * 10f;
+        rb.AddForce(moveDir, ForceMode.Force);
     }
 
-    public float HandleRotation(bool faceTowardsCamera) {
-        Vector3 forward = Vector3.ProjectOnPlane(cameraHandler.transform.forward, Vector3.up);
-        Quaternion desiredRotation = Quaternion.LookRotation(forward, Vector3.up);
-        rb.rotation = desiredRotation;
-        return 0;
+    public void HandleSpeedControl()
+    {
+        Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+
+        if (flatVelocity.magnitude > moveSpeed * currentSpeedMultiplier)
+        {
+            Vector3 limitedVelocity = flatVelocity.normalized * moveSpeed * currentSpeedMultiplier;
+            rb.linearVelocity = new Vector3(limitedVelocity.x, rb.linearVelocity.y, limitedVelocity.z);
+        }
+    }
+
+    public void HandleRotation(bool move) {
+        Vector3 viewDir = transform.position - new Vector3(cameraHandler.transform.position.x, transform.position.y, cameraHandler.transform.position.z);
+        orientation.forward = viewDir.normalized;
+        if (move) {
+            if (inputDir != Vector3.zero)
+                playerObj.forward = Vector3.Slerp(playerObj.forward, inputDir.normalized, Time.deltaTime * rotationSpeed);
+        }
+        else {
+            playerObj.forward = Vector3.Slerp(playerObj.forward, orientation.forward, Time.deltaTime * rotationSpeed);
+        }
+    }
+
+    public void SetDrag(float drag)
+    {
+        rb.linearDamping = drag;
     }
 
     public void HandleStationaryInput() {
         if (Input.GetKeyDown(keyCodes.jumpKey))
         {    
+            SetDrag(0);
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
         if (Input.GetKeyDown(keyCodes.crouchKey))
@@ -126,5 +147,14 @@ public class PlayerStateMachine : Statemachine<EPlayerStates>
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
+    }
+
+    private void OnGUI()
+    {
+        Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        GUIStyle style = new GUIStyle();
+        style.fontSize = 14;
+        style.normal.textColor = Color.white;
+        GUI.Label(new Rect(0, 100, 500, 50), $"Speed: {flatVelocity.magnitude}", style);
     }
 }

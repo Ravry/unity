@@ -12,6 +12,7 @@ public class PlayerRunState : BaseState<EPlayerStates>
 
     public override void EnterState()
     {
+        PSM.currentSpeedMultiplier = PSM.sprintMultiplier;
         PSM.animator.CrossFade("run", .05f);
     }
 
@@ -19,10 +20,16 @@ public class PlayerRunState : BaseState<EPlayerStates>
     {
         PSM.HandleRotation(true);
         PSM.HandleStationaryInput();
+        PSM.HandleSpeedControl();
     }
 
     public override void FixedUpdate() {
-        PSM.HandleKeyboardMovement(true);
+        PSM.HandleKeyboardMovement();
+    }
+
+    public override void ExitState()
+    {
+        PSM.currentSpeedMultiplier = 1;
     }
 
     public override EPlayerStates CheckState()
@@ -32,7 +39,7 @@ public class PlayerRunState : BaseState<EPlayerStates>
 
         if (PSM.inputVec.magnitude == 0)
             return EPlayerStates.Idle;
-        else
+        else if (!PSM.holdingSprintKey)
             return EPlayerStates.Walk;
 
         return EPlayerStates.Run;

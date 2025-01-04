@@ -22,8 +22,12 @@ public class PlayerCrouchIdleState : BaseState<EPlayerStates>
 
     public override void Update()
     {
-        PSM.HandleKeyboardMovement(true);
         PSM.HandleStationaryInput();
+    }
+
+    public override void FixedUpdate()
+    {
+        PSM.HandleKeyboardMovement();
     }
 
     public override EPlayerStates CheckState()

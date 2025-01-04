@@ -19,7 +19,6 @@ public class PlayerIdleState : BaseState<EPlayerStates>
 
     public override void Update()
     {
-        PSM.HandleRotation(true);
         PSM.HandleStationaryInput();
     }
 

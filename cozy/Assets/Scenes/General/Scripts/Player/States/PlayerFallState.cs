@@ -13,17 +13,29 @@ public class PlayerFallState : BaseState<EPlayerStates>
 
     public override void EnterState()
     {
+        PSM.SetDrag(0);
         PSM.animator.CrossFade("fall", .05f);
         startPosY = PSM.transform.position.y;
     }
 
     public override void Update()
     {
+        PSM.HandleRotation(false);
+        PSM.HandleSpeedControl();
+    }
+
+    public override void FixedUpdate()
+    {
+    }
+
+    private void HandleAirMovement() {
+
     }
 
     public override void ExitState()
     {
-        // SoundManager.instance.Play("jumpland");
+        PSM.SetDrag(PSM.groundDrag);
+        SoundManager.instance.Play("jumpland");
         float endPosY = PSM.transform.position.y;
         float fallDistance = endPosY - startPosY;
 
